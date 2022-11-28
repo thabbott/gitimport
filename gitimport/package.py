@@ -2,6 +2,8 @@ import sys
 import os
 import tempfile
 import subprocess
+import shutil
+from gitimport import config
 
 # Find git command
 def _find_git():
@@ -14,9 +16,9 @@ def _find_git():
 def _clone(path, dest, branch):
     git = _find_git()
     if branch:
-        args = [git, 'clone', '--bare', '--branch', branch, path, dest])
+        args = [git, 'clone', '--branch', branch, path, dest]
     else:
-        args = [git, 'clone', '--bare', path, dest]
+        args = [git, 'clone', path, dest]
     result = subprocess.run(args)
     if result.returncode != 0:
         shutil.rmtree(dest)
@@ -28,8 +30,15 @@ def _clone(path, dest, branch):
 # Check out a specific commit
 def _checkout(dest, commit):
     git = _find_git()
-    args = [git, 'checkout', commit]
+    args = [
+        git, 
+        '--git-dir', os.path.join(dest, '.git'), 
+        '--work-tree', dest, 
+        'checkout', 
+        commit
+    ]
     result = subprocess.run(args)
+    print(result)
     if result.returncode != 0:
         shutil.rmtree(dest)
         raise ValueError(f'git checkout failed with commit hash {commit}')
@@ -64,7 +73,8 @@ def use(path, branch=None, commit=None, prefix=None, add_to_path=True):
     """
     
     # Create directory for holding package
-    tdir = tempfile.mkdtemp(prefix=config['package_dir'])
+    os.makedirs(config['package_dir'], exist_ok=True)
+    tdir = tempfile.mkdtemp(dir=config['package_dir'])
     dest = tdir if not prefix else os.path.join(tdir, prefix)
     os.makedirs(dest, exist_ok=True)
     
