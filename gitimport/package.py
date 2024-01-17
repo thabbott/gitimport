@@ -16,9 +16,9 @@ def _find_git():
 def _clone(path, dest, branch):
     git = _find_git()
     if branch:
-        args = [git, 'clone', '--branch', branch, path, dest]
+        args = [git, 'clone', '--branch', branch, path, dest, '--quiet']
     else:
-        args = [git, 'clone', path, dest]
+        args = [git, 'clone', path, dest, '--quiet']
     result = subprocess.run(args)
     if result.returncode != 0:
         shutil.rmtree(dest)
@@ -35,10 +35,10 @@ def _checkout(dest, commit):
         '--git-dir', os.path.join(dest, '.git'), 
         '--work-tree', dest, 
         'checkout', 
-        commit
+        commit,
+        '--quiet'
     ]
     result = subprocess.run(args)
-    print(result)
     if result.returncode != 0:
         shutil.rmtree(dest)
         raise ValueError(f'git checkout failed with commit hash {commit}')
